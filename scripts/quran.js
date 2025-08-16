@@ -1,40 +1,262 @@
-// API base URLs
-const QURAN_API = "https://api.alquran.cloud/v1/surah/";
-const TAFSEER_API = "https://api.quran-tafseer.com/tafseer/1/"; // Example English tafseer
+/* Qur'an Player (MP3Quran-first)
+ - Loads ALL reciters from mp3quran.net API
+ - For each reciter, uses their "moshaf" (style) which defines a base `server` and a `surah_list`
+ - Audio URL = `${server}${NNN}.mp3` (NNN = 001..114)
+ - If the API fails (CORS/network), we fall back to a small curated set with known-good servers.
+ - ADDED: reciter search, auto-next, and fetch timeout + saved auto-next preference
+*/
 
-const surahSelect = document.getElementById("surahSelect");
-const languageSelect = document.getElementById("languageSelect");
-const quranText = document.getElementById("quranText");
-const tafseerText = document.getElementById("tafseerText");
+const API_EN = "https://www.mp3quran.net/api/v3/reciters?language=en";
+const API_AR = "https://www.mp3quran.net/api/v3/reciters?language=ar";
 
-// Load Surah list
-fetch("https://api.alquran.cloud/v1/surah")
-  .then(res => res.json())
-  .then(data => {
-    data.data.forEach(surah => {
-      const option = document.createElement("option");
-      option.value = surah.number;
-      option.textContent = `${surah.number}. ${surah.englishName} (${surah.name})`;
-      surahSelect.appendChild(option);
-    });
+const SURAH_NAMES = [
+ "Al-Fātiḥah","Al-Baqarah","Āl ʿImrān","An-Nisā’","Al-Mā’idah","Al-Anʿām","Al-Aʿrāf","Al-Anfāl","At-Tawbah","Yūnus","Hūd","Yūsuf","Ar-Raʿd","Ibrāhīm","Al-Ḥijr","An-Naḥl","Al-Isrā’","Al-Kahf","Maryam","Ṭā Hā","Al-Anbiyā’","Al-Ḥajj","Al-Mu’minūn","An-Nūr","Al-Furqān","Ash-Shuʿarā’","An-Naml","Al-Qaṣaṣ","Al-ʿAnkabūt","Ar-Rūm","Luqmān","As-Sajdah","Al-Aḥzāb","Saba’","Fāṭir","Yā Sīn","As-Ṣaffāt","Ṣād","Az-Zumar","Ghāfir","Fuṣṣilat","Ash-Shūrā","Az-Zukhruf","Ad-Dukhān","Al-Jāthiyah","Al-Aḥqāf","Muḥammad","Al-Fatḥ","Al-Ḥujurāt","Qāf","Adh-Dhāriyāt","Aṭ-Ṭūr","An-Najm","Al-Qamar","Ar-Raḥmān","Al-Wāqiʿah","Al-Ḥadīd","Al-Mujādilah","Al-Ḥashr","Al-Mumtaḥanah","Aṣ-Ṣaff","Al-Jumuʿah","Al-Munāfiqūn","At-Taghābun","Aṭ-Ṭalāq","At-Taḥrīm","Al-Mulk","Al-Qalam","Al-Ḥāqqah","Al-Maʿārij","Nūḥ","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyāmah","Al-Insān","Al-Mursalāt","An-Naba’","An-Nāziʿāt","ʿAbasa","At-Takwīr","Al-Infiṭār","Al-Muṭaffifīn","Al-Inshiqāq","Al-Burūj","Aṭ-Ṭāriq","Al-Aʿlā","Al-Ghāshiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Aḍ-Ḍuḥā","Ash-Sharḥ","At-Tīn","Al-ʿAlaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-ʿĀdiyāt","Al-Qāriʿah","At-Takāthur","Al-ʿAṣr","Al-Humazah","Al-Fīl","Quraysh","Al-Māʿūn","Al-Kawthar","Al-Kāfirūn","An-Naṣr","Al-Masad","Al-Ikhlāṣ","Al-Falaq","An-Nās"
+];
+
+// DOM
+const reciterEl     = document.getElementById("reciterSelect");
+const moshafWrap    = document.getElementById("moshafWrap");
+const moshafEl      = document.getElementById("moshafSelect");
+const reciterSearch = document.getElementById("reciterSearch");
+const autoNext      = document.getElementById("autoNext");
+const listEl        = document.getElementById("surahList");
+const searchEl      = document.getElementById("search");
+const player        = document.getElementById("player");
+const nowEl         = document.getElementById("now");
+
+const pad3 = n => String(n).padStart(3,"0");
+function status(t){ nowEl.textContent = t || ""; }
+function debounce(fn, ms=200){ let id; return (...a)=>{ clearTimeout(id); id=setTimeout(()=>fn(...a), ms); }; }
+
+// Global state
+let allReciters = [];     // [{id,name,moshaf:[{id,name,server,surah_list}]}]
+let filtered    = null;   // filtered list for search
+let currentReciter = null;
+let currentMoshaf  = null;
+let lastPlayedSurah = null;
+
+// remember auto-next preference
+try {
+  autoNext.checked = localStorage.getItem("qh_autonext") === "1";
+  autoNext.addEventListener("change", ()=> {
+    try { localStorage.setItem("qh_autonext", autoNext.checked ? "1" : "0"); } catch {}
   });
+} catch {}
 
-// Load Qur'an and Tafseer when Surah changes
-surahSelect.addEventListener("change", () => {
-  const surahNumber = surahSelect.value;
-  const lang = languageSelect.value;
+// Boot
+init();
 
-  // Fetch Qur'an Arabic text
-  fetch(`${QURAN_API}${surahNumber}`)
-    .then(res => res.json())
-    .then(data => {
-      quranText.innerHTML = data.data.ayahs.map(a => `<p>${a.text}</p>`).join("");
-    });
+async function init(){
+  status("Loading reciters…");
+  // Try English API → then Arabic API → then fallback hardcoded
+  let data = await fetchJson(API_EN);
+  if (!data || !data.reciters) data = await fetchJson(API_AR);
+  if (data && data.reciters) {
+    allReciters = data.reciters.filter(r => Array.isArray(r.moshaf) && r.moshaf.length);
+    status("");
+  } else {
+    // Fallback minimal set (guaranteed servers)
+    allReciters = FALLBACK_RECITERS;
+    status("Using fallback list (API unavailable).");
+  }
 
-  // Fetch Tafseer (example uses English)
-  fetch(`${TAFSEER_API}${surahNumber}`)
-    .then(res => res.json())
-    .then(data => {
-      tafseerText.innerHTML = data.text || "No tafseer available.";
-    });
-});
+  // Sort by name (stable)
+  allReciters.sort((a,b)=>a.name.localeCompare(b.name));
+
+  // Populate dropdown (via helper so we can re-render for search)
+  renderReciters(0);
+
+  // Bind events
+  reciterEl.addEventListener("change", (e)=> onChooseReciter(Number(e.target.value)));
+  moshafEl.addEventListener("change", (e)=> onChooseMoshaf(Number(e.target.value)));
+  searchEl.addEventListener("input", onSearch);
+  if (reciterSearch) {
+    reciterSearch.addEventListener("input", debounce(()=>{
+      const q = reciterSearch.value.toLowerCase().trim();
+      filtered = q ? allReciters.filter(r => r.name.toLowerCase().includes(q)) : null;
+      renderReciters(0);
+    }, 120));
+  }
+
+  // Auto-next: when track ends, try to play next available sūrah
+  player.addEventListener("ended", ()=>{
+    if (!autoNext.checked || !currentMoshaf || !lastPlayedSurah) return;
+    const avail = availableSetFromMoshaf(currentMoshaf);
+    let n = lastPlayedSurah + 1;
+    while (n <= 114) {
+      if (!avail || avail.has(n)) { playFromMoshaf(currentReciter, currentMoshaf, n); return; }
+      n++;
+    }
+  });
+}
+
+async function fetchJson(url, timeoutMs=7000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    const r = await fetch(url, { cache:"no-store", signal: ctrl.signal });
+    clearTimeout(t);
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ clearTimeout(t); return null; }
+}
+
+function getActiveReciters(){
+  return (filtered && filtered.length) ? filtered : allReciters;
+}
+
+function renderReciters(selectIndex=0){
+  const list = getActiveReciters();
+  reciterEl.innerHTML = list.map((r,i)=>`<option value="${i}">${r.name}</option>`).join("");
+  reciterEl.value = String(selectIndex);
+  onChooseReciter(selectIndex);
+}
+
+function onChooseReciter(idx){
+  const list = getActiveReciters();
+  currentReciter = list[idx];
+  // Some reciters have multiple moshaf (styles); pick the first by default
+  if (currentReciter && currentReciter.moshaf && currentReciter.moshaf.length){
+    moshafWrap.style.display = currentReciter.moshaf.length > 1 ? "" : "none";
+    moshafEl.innerHTML = currentReciter.moshaf.map((m,i)=>`<option value="${i}">${m.name || ("Style "+(i+1))}</option>`).join("");
+    moshafEl.value = "0";
+    onChooseMoshaf(0);
+  } else {
+    moshafWrap.style.display = "none";
+    currentMoshaf = null;
+    renderList(); // still render 1–114, but buttons will be disabled
+  }
+}
+
+function onChooseMoshaf(i){
+  currentMoshaf = currentReciter.moshaf[i];
+  renderList();
+}
+
+function onSearch(){
+  const q = searchEl.value.toLowerCase().trim();
+  renderList(q);
+}
+
+function availableSetFromMoshaf(m){
+  // m.surah_list is e.g. "1,2,3,..." (string) — create a Set of numbers
+  if (!m || !m.surah_list) return null;
+  const set = new Set();
+  m.surah_list.split(",").forEach(s=>{
+    const n = parseInt(s.trim(), 10);
+    if (!isNaN(n)) set.add(n);
+  });
+  return set.size ? set : null;
+}
+
+function renderList(query=""){
+  listEl.innerHTML = "";
+  const avail = availableSetFromMoshaf(currentMoshaf); // may be null → unknown list (we still try)
+  const server = currentMoshaf ? currentMoshaf.server : null;
+
+  SURAH_NAMES.forEach((name, i)=>{
+    const num = i+1;
+    const show = !query ||
+      name.toLowerCase().includes(query) ||
+      String(num).includes(query);
+    if (!show) return;
+
+    const li = document.createElement("li");
+    li.className = "card";
+
+    const btn = document.createElement("button");
+    btn.className = "primary";
+    btn.textContent = "Play";
+    btn.dataset.num = String(num);
+
+    // Disable if we know it’s unavailable for this moshaf
+    const knownMissing = avail && !avail.has(num);
+    if (!server || knownMissing){
+      btn.disabled = true;
+      btn.title = "This surah isn’t in this style for this reciter.";
+    }
+
+    btn.addEventListener("click", ()=> playFromMoshaf(currentReciter, currentMoshaf, num));
+
+    const label = document.createElement("div");
+    label.innerHTML = `<strong>${num}. ${name}</strong>`;
+
+    li.appendChild(label);
+    li.appendChild(btn);
+    listEl.appendChild(li);
+  });
+}
+
+async function playFromMoshaf(reciter, moshaf, surahNum){
+  if (!reciter || !moshaf) return;
+  const base = moshaf.server.endsWith("/") ? moshaf.server : (moshaf.server + "/");
+  const url = `${base}${pad3(surahNum)}.mp3`;
+  status(`Trying ${reciter.name} • ${moshaf.name || "Style"} • Sūrah ${surahNum}…`);
+  const ok = await tryPlay(url);
+  if (!ok){
+    status(`Couldn’t load from this style. If available, pick a different style (moshaf) for ${reciter.name}.`);
+  } else {
+    lastPlayedSurah = surahNum; // for auto-next
+  }
+}
+
+/* Simple player with quick success/fail signal */
+async function tryPlay(url){
+  return new Promise((resolve)=>{
+    let settled = false;
+    function done(ok){
+      if (settled) return;
+      settled = true;
+      player.removeEventListener("playing", onPlay);
+      player.removeEventListener("error", onErr);
+      clearTimeout(t);
+      resolve(ok);
+    }
+    function onPlay(){ status(`Now playing • ${url.split("/").slice(0,4).join("/")}/…`); done(true); }
+    function onErr(){ done(false); }
+
+    player.addEventListener("playing", onPlay, { once:true });
+    player.addEventListener("error", onErr, { once:true });
+    player.src = url;
+    player.play().catch(()=>{});
+    const t = setTimeout(()=>done(false), 7000);
+  });
+}
+
+/* Fallback reciters if the API is down or blocked by CORS.
+ Each has a minimal moshaf array with a known-good `server` and a generic name. */
+const FALLBACK_RECITERS = [
+  {
+    id: 10001, name: "Mishary Rashid Alafasy",
+    moshaf: [{ id: 1, name: "Murattal 64kbps", server: "https://server8.mp3quran.net/afs/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10002, name: "Saud Al-Shuraim",
+    moshaf: [{ id: 1, name: "Murattal 64kbps", server: "https://server8.mp3quran.net/shur/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10003, name: "Abdul Rahman As-Sudais",
+    moshaf: [{ id: 1, name: "Murattal 64kbps", server: "https://server8.mp3quran.net/sds/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10004, name: "Yasser Al-Dossari",
+    moshaf: [{ id: 1, name: "Murattal", server: "https://server8.mp3quran.net/yasser/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10005, name: "Abdul Basit Abdus Samad",
+    moshaf: [{ id: 1, name: "Murattal 64kbps", server: "https://server8.mp3quran.net/basit/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10006, name: "Saad Al-Ghamdi",
+    moshaf: [{ id: 1, name: "Murattal", server: "https://server8.mp3quran.net/gmd/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10007, name: "Muhammad Ayyub",
+    moshaf: [{ id: 1, name: "Murattal", server: "https://server8.mp3quran.net/ayy/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  },
+  {
+    id: 10008, name: "Abdullah Al-Juhany",
+    moshaf: [{ id: 1, name: "Murattal (mirror)", server: "https://server11.mp3quran.net/jhn/", surah_list: Array.from({length:114},(_,i)=>i+1).join(",") }]
+  }
+];
+Qur'an player: API + fallback fetch

@@ -1,0 +1,171 @@
+/* =========================================================
+   Sunnah Hub — styles.css (complete)
+   - Base tokens & typography
+   - Generic layout & buttons
+   - Home page (logo + 2 cards)
+   - Simple audio Qur’an Player cards
+   - Hadith Library list
+   - Qur’an Reader (Arabic + Translation/Tafsir)
+   ========================================================= */
+
+/* ============ tokens ============ */
+:root{
+  --bg:#f7f7fa;
+  --panel:#ffffff;
+  --ink:#0b1324;
+  --muted:#5b6478;
+  --line:#e6e9f1;
+  --accent:#1e8e3e;
+  --accent-2:#0f6a2a;
+  --shadow:0 8px 40px rgba(16,24,40,.06);
+}
+
+/* ============ base typography ============ */
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0;
+  color:var(--ink);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+h1,h2,h3{ margin:0 0 .4rem }
+a{ color:var(--accent); text-decoration:none }
+a:hover{ text-decoration:underline }
+
+/* ============ generic layout & buttons ============ */
+.container{ max-width:1100px; margin:0 auto; padding:24px }
+.hero{ text-align:center; margin:24px 0 12px }
+.hero h1{ font-size:clamp(28px,4vw,44px) }
+.tag{ color:var(--muted) }
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 18px; border-radius:12px; font-weight:600; border:1px solid var(--line);
+  background:#fff; color:var(--ink); cursor:pointer; transition:.2s;
+}
+.btn:hover{ box-shadow:var(--shadow) }
+.btn-primary{
+  background:var(--accent); color:#fff; border-color:transparent;
+}
+.btn-primary:hover{ background:var(--accent-2) }
+
+/* =========================================================
+   HOME PAGE (logo + 2 cards)
+   ========================================================= */
+.home-wrap{ max-width:1100px; margin:0 auto; padding:24px }
+.home-logo{
+  display:block; margin:28px auto 18px; width:min(220px,60vw); height:auto;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.07));
+}
+
+.home-grid{
+  display:grid; gap:22px; grid-template-columns:1fr;
+  margin-top:14px;
+}
+@media (min-width:840px){ .home-grid{ grid-template-columns:1fr 1fr } }
+
+.home-card{
+  background:var(--panel); border:1px solid var(--line); border-radius:18px;
+  padding:36px 32px; text-align:center; box-shadow:var(--shadow);
+}
+.home-card h3{ font-size:clamp(22px,2.8vw,28px); margin-bottom:10px }
+.home-card p{ color:var(--muted); margin:0 0 18px; font-size:clamp(14px,2vw,16px) }
+
+/* =========================================================
+   SIMPLE AUDIO QUR’AN PLAYER (list of surahs + Play buttons)
+   (used by quran-player.html + scripts/quran.js)
+   ========================================================= */
+.toolbar{
+  display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:12px 0 16px;
+}
+.toolbar select, .toolbar input[type="search"]{
+  padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff;
+  font-size:15px;
+}
+.list{ list-style:none; padding:0; margin:0; display:grid; gap:10px }
+.card{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff;
+}
+.primary{
+  padding:8px 12px; border-radius:10px; border:0; color:#fff; background:var(--accent);
+  cursor:pointer;
+}
+.primary[disabled]{ opacity:.5; cursor:not-allowed }
+
+/* =========================================================
+   HADITH LIBRARY (basic list)
+   ========================================================= */
+.hadith-list{ list-style:none; padding:0; margin:0; display:grid; gap:12px }
+.hadith-item{
+  background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px;
+  box-shadow:var(--shadow);
+}
+.hadith-item h4{ margin:0 0 6px; font-size:18px }
+.hadith-item .meta{ color:var(--muted); font-size:14px }
+
+/* =========================================================
+   QUR’AN READER (Arabic + Translation/Tafsīr side-by-side)
+   (used by quran.html + scripts/quran-reader.js)
+   ========================================================= */
+
+/* page container */
+.quran-page{
+  max-width:1100px;
+  margin:0 auto;
+  padding:24px;
+}
+
+/* hero */
+.quran-page .hero{ text-align:center; margin-bottom:18px }
+.quran-page .hero h1{ font-size:clamp(28px,4vw,44px); margin:0 0 8px }
+.quran-page .hero .tagline{ opacity:.8; margin:0 }
+
+/* controls row */
+.controls{
+  display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; justify-content:center;
+  margin:18px 0 24px;
+}
+.control{ display:inline-flex; flex-direction:column; gap:6px; min-width:220px }
+.control>span{ font-size:14px; opacity:.85 }
+.control select, .control input[type="search"]{
+  appearance:none; padding:12px 14px; border:1px solid var(--line);
+  border-radius:10px; background:#fff; font-size:15px; line-height:1.2;
+  transition: box-shadow .2s, border-color .2s; width:100%;
+}
+.control select:focus, .control input[type="search"]:focus{
+  outline:none; border-color:#98c9b0; box-shadow:0 0 0 4px rgba(30,142,62,.12);
+}
+
+/* info note */
+.note{
+  background:#fff7e6; border:1px solid #ffe0a6; color:#5a3b00;
+  padding:10px 12px; border-radius:10px; margin:0 0 14px;
+}
+
+/* split panels */
+.panels{ display:grid; gap:16px; grid-template-columns:1fr }
+@media (min-width:900px){ .panels{ grid-template-columns:1fr 1fr } }
+
+.panel{
+  background:#fff; border:1px solid var(--line); border-radius:14px;
+  padding:14px; box-shadow:var(--shadow);
+}
+.panel-title{ margin:0 0 10px; font-size:16px; opacity:.9 }
+
+/* ayah rows */
+.ayah-list{ display:grid; gap:8px }
+.ayah-row{
+  display:grid; grid-template-columns:36px 1fr; align-items:start; gap:10px;
+  padding:10px 12px; border:1px solid #eef1f7; border-radius:10px; background:#fafbfc;
+}
+.ayah-row.rtl{ direction:rtl; unicode-bidi:isolate; font-family:"Amiri", serif }
+.ayah-num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:999px; background:#e6f4ec; color:#174d2b;
+  font-weight:600; font-size:13px; border:1px solid #cfe9d9;
+}
+.ayah-text{ margin:0; font-size:clamp(16px,2.1vw,19px); line-height:1.9 }

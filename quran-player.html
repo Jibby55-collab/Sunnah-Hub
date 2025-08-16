@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Qur’an Player — Sunnah Hub</title>
+
+  <!-- Global stylesheet (keep if you already have styles.css) -->
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital@0;1&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Minimal page polish so it looks good even without styles.css -->
+  <style>
+    :root{--bg:#f6f5ef;--fg:#0b1324;--muted:#5e6a66;--brand:#155f3e;--card:#fff;--line:#e8e4d9}
+    html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .container{width:min(1100px,92vw);margin:0 auto}
+    header.nav{background:#fff;border-bottom:1px solid var(--line)}
+    .nav__row{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+    .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:inherit}
+    .brand img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .links a{margin-left:14px;text-decoration:none;color:#2b3b35}
+    .links a.active{color:var(--brand);font-weight:600}
+
+    .hero{padding:40px 0 12px}
+    .hero__title{margin:0 0 6px;font-size:clamp(28px,3.6vw,40px);font-weight:800}
+    .hero__tag{margin:0;color:var(--muted)}
+
+    .toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin:16px 0 20px}
+    .toolbar label{font-size:13px;color:#223}
+    .toolbar input[type="search"],
+    .toolbar input[type="text"],
+    .toolbar select{display:block;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:220px}
+    .toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;height:40px}
+
+    #surahList{list-style:none;margin:0;padding:0;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center}
+    .btn{appearance:none;border:1.5px solid var(--brand);background:#fff;color:var(--brand);padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn:hover{background:var(--brand);color:#fff}
+    #now{margin-top:.5rem;color:var(--muted);min-height:1.2em}
+    #player{width:100%;margin-top:.6rem}
+
+    footer{border-top:1px solid var(--line);background:#fff;margin-top:50px}
+    .foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;padding:20px 0}
+    .list{margin:0;padding-left:18px}
+  </style>
+<link rel="stylesheet" href="./styles.css">
+<script src="./scripts/quran.js?v=1013" defer></script>
+  <!-- simple site nav -->
+  <header class="nav">
+    <div class="container nav__row">
+      <a class="brand" href="index.html">
+        <img src="images/logo.png" alt="Sunnah Hub logo">
+        <strong>Sunnah Hub</strong>
+      </a>
+      <nav class="links">
+        <a href="index.html">Home</a>
+        <a href="quran.html" class="active">Qur’an</a>
+        <a href="hadith.html">Hadiths</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- hero -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__title">Qur’an Player</h1>
+      <p class="hero__tag">Pick a reciter, then choose a sūrah. Search & auto-next included.</p>
+    </div>
+  </section>
+
+  <!-- player UI -->
+  <main class="container">
+    <div class="toolbar">
+      <label>Reciter
+        <select id="reciterSelect"><option>Loading…</option></select>
+      </label>
+
+      <label>Search reciters
+        <input id="reciterSearch" type="text" placeholder="Type a reciter name…">
+      </label>
+
+      <label id="moshafWrap" style="display:none">Style
+        <select id="moshafSelect"></select>
+      </label>
+
+      <label>Search sūrah
+        <input id="search" type="search" placeholder="Name or number…">
+      </label>
+
+      <label class="toggle" title="Automatically play the next available sūrah">
+        <input id="autoNext" type="checkbox"> Auto-next
+      </label>
+    </div>
+
+    <ul id="surahList"></ul>
+
+    <div id="now"></div>
+    <audio id="player" controls></audio>
+  </main>
+
+  <!-- footer -->
+  <footer>
+    <div class="container foot">
+      <div>
+        <h5>Sunnah Hub</h5>
+        <p class="muted">Modern resources to nurture faith, knowledge, and spiritual growth.</p>
+      </div>
+      <div>
+        <h6>Quick Links</h6>
+        <ul class="list">
+          <li><a href="quran.html">Qur’an</a></li>
+          <li><a href="quran-player.html">Audio</a></li>
+          <li><a href="hadith.html">Hadiths</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Contact</h6>
+        <ul class="list">
+          <li><a href="mailto:contact@sunnahhub.org">contact@sunnahhub.org</a></li>
+          <li class="muted">© <span id="y"></span> Sunnah Hub</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Load YOUR JS (bump v= to force refresh) -->
+  <script src="scripts/quran.js?v=1001" defer></script>
+  <script>document.getElementById('y').textContent=new Date().getFullYear();</script>
+</body>
+</html>

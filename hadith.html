@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="./styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hadiths – Sunnah Hub</title>
+  <link href="styles.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital@0;1&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+<body>
+  <header class="nav">
+    <div class="container nav__row">
+      <a class="brand" href="index.html">
+        <img class="brand__logo" src="images/logo.png" alt="Sunnah Hub logo">
+        <span class="brand__name">Sunnah Hub</span>
+      </a>
+      <nav class="links">
+        <a href="index.html">Home</a>
+        <a href="quran.html">Qur’an</a>
+        <a href="quran-player.html">Audio</a>
+        <a href="hadith.html" class="active">Hadiths</a>
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero__wrap">
+      <h1 class="hero__title">Hadiths</h1>
+      <p class="hero__tag">Explore authentic sayings and actions of Prophet Muhammad ﷺ.</p>
+    </div>
+  </section>
+
+  <main class="container sections">
+    <section class="cards">
+      <article class="card">
+        <h3>Sahih al-Bukhari</h3>
+        <p>Collection of hadiths verified by Imam al-Bukhari.</p>
+        <a class="btn" href="hadith-library.html">Read</a>
+      </article>
+
+      <article class="card">
+        <h3>Sahih Muslim</h3>
+        <p>Authentic narrations compiled by Imam Muslim.</p>
+        <a class="btn" href="hadith-library.html">Read</a>
+      </article>
+
+      <article class="card">
+        <h3>Other Collections</h3>
+        <p>Including Sunan Abu Dawood, Tirmidhi, and more.</p>
+        <a class="btn" href="hadith-library.html">Browse</a>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <h5>Sunnah Hub</h5>
+        <p class="muted">Modern resources to nurture faith, knowledge, and spiritual growth.</p>
+      </div>
+      <div>
+        <h6>Quick Links</h6>
+        <ul class="list">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quran.html">Qur’an</a></li>
+          <li><a href="quran-player.html">Audio</a></li>
+          <li><a href="hadith.html">Hadiths</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Contact</h6>
+        <ul class="list">
+          <li><a href="mailto:contact@sunnahhub.org">contact@sunnahhub.org</a></li>
+          <li class="muted">© <span id="y"></span> Sunnah Hub</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

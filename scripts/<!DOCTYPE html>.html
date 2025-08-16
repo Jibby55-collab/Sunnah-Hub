@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hadith Library – Sunnah Hub</title>
+  <link href="styles.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital@0;1&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .lib{ width:min(1100px,92vw); margin:26px auto 60px; }
+    .lib .note{ color:#5c6b66; }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav__row">
+      <a class="brand" href="index.html">
+        <img class="brand__logo" src="images/logo.png" alt="Sunnah Hub logo">
+        <span class="brand__name">Sunnah Hub</span>
+      </a>
+      <nav class="links">
+        <a href="index.html">Home</a>
+        <a href="quran.html">Qur’an</a>
+        <a href="quran-player.html">Audio</a>
+        <a href="hadith.html" class="active">Hadiths</a>
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero__wrap">
+      <h1 class="hero__title">Hadith Library</h1>
+      <p class="hero__tag">Browse authentic collections.</p>
+    </div>
+  </section>
+
+  <main class="lib">
+    <p class="note">Placeholder page — link your data source here (e.g., sunnah.com, your own JSON, or a future API).</p>
+    <ul class="cards">
+      <li class="card">
+        <h3>Sahih al-Bukhārī</h3>
+        <p>Imam al-Bukhārī’s verified collection.</p>
+        <a class="btn" href="#">Read</a>
+      </li>
+      <li class="card">
+        <h3>Sahih Muslim</h3>
+        <p>Authentic narrations by Imam Muslim.</p>
+        <a class="btn" href="#">Read</a>
+      </li>
+      <li class="card">
+        <h3>Other Collections</h3>
+        <p>Abu Dawood, Tirmidhi, and more.</p>
+        <a class="btn" href="#">Browse</a>
+      </li>
+    </ul>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <h5>Sunnah Hub</h5>
+        <p class="muted">Modern resources to nurture faith, knowledge, and spiritual growth.</p>
+      </div>
+      <div>
+        <h6>Quick Links</h6>
+        <ul class="list">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quran.html">Qur’an</a></li>
+          <li><a href="quran-player.html">Audio</a></li>
+          <li><a href="hadith.html">Hadiths</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Contact</h6>
+        <ul class="list">
+          <li><a href="mailto:contact@sunnahhub.org">contact@sunnahhub.org</a></li>
+          <li class="muted">© <span id="y"></span> Sunnah Hub</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
